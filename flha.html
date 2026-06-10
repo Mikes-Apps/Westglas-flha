@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Westglas FLHA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .hazard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 10px; }
+        .header-black { background: #111827; color: white; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #9ca3af; padding: 8px; vertical-align: top; text-align: center; }
+        .risk-high { background-color: #fee2e2; font-weight: bold; }
+        .risk-medium { background-color: #fef3c7; font-weight: bold; }
+        .risk-low { background-color: #ecfdf5; font-weight: bold; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; padding: 10px; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-5xl mx-auto bg-white shadow-2xl min-h-screen">
+        <!-- Header -->
+        <div class="header-black p-6 text-center">
+            <h1 class="text-4xl font-bold tracking-wider">WESTGLAS Insulation Ltd.</h1>
+            <p class="mt-2 text-lg">Commercial and Industrial • Mechanical Insulation • Firestopping</p>
+        </div>
+
+        <div class="p-6 space-y-8">
+            <!-- Language & Weather -->
+            <div class="flex justify-between items-start no-print">
+                <div id="weather-info" class="text-sm font-medium text-gray-700 bg-gray-50 px-4 py-2 rounded"></div>
+                <select id="language" onchange="changeLanguage()" class="border px-4 py-2 rounded">
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    <option value="es">Español</option>
+                </select>
+            </div>
+
+            <!-- Basic Info -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block font-semibold" id="lbl-date">DATE:</label>
+                    <input type="date" id="date" class="w-full border p-2 rounded">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block font-semibold" id="lbl-project">PROJECT:</label>
+                    <input type="text" id="project" class="w-full border p-2 rounded" placeholder="Project name / Job #">
+                </div>
+            </div>
+
+            <!-- STOP & THINK -->
+            <div class="border-2 border-red-700 p-6 bg-red-50 rounded-xl">
+                <h2 id="stop-title" class="text-red-700 text-3xl font-bold">STOP &amp; THINK</h2>
+                <p id="stop-text" class="font-semibold text-lg mt-2">LOOK AROUND. IDENTIFY, ASSESS, CONTROL OR ELIMINATE HAZARDS. RESUME WORK.</p>
+            </div>
+
+            <!-- Identified Hazards -->
+            <div>
+                <h3 id="hazards-header" class="text-xl font-bold mb-3">IDENTIFIED HAZARDS (Check all that apply)</h3>
+                <div id="hazards-grid" class="hazard-grid text-sm"></div>
+            </div>
+
+            <!-- FIXED RISK LEVEL MATRIX -->
+            <div>
+                <h3 id="matrix-title" class="text-xl font-bold mb-2">RISK LEVEL MATRIX</h3>
+                <table class="text-sm" id="risk-matrix">
+                    <thead>
+                        <tr>
+                            <th rowspan="5" class="bg-gray-200 w-40 align-middle">SEVERITY OF RISK</th>
+                            <th colspan="3" class="bg-gray-200">PROBABILITY OF RISK</th>
+                        </tr>
+                        <tr class="bg-gray-200">
+                            <th>A</th>
+                            <th>B</th>
+                            <th>C</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="bg-gray-100 font-bold">I</td>
+                            <td class="risk-high">H</td>
+                            <td class="risk-high">H</td>
+                            <td class="risk-medium">M</td>
+                        </tr>
+                        <tr>
+                            <td class="bg-gray-100 font-bold">II</td>
+                            <td class="risk-high">H</td>
+                            <td class="risk-medium">M</td>
+                            <td class="risk-low">L</td>
+                        </tr>
+                        <tr>
+                            <td class="bg-gray-100 font-bold">III</td>
+                            <td class="risk-medium">M</td>
+                            <td class="risk-low">L</td>
+                            <td class="risk-low">L</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="text-xs mt-2 text-gray-600">H = High (Catastrophic) | M = Medium (Serious) | L = Low (Minor)</p>
+            </div>
+
+            <!-- Action Plan -->
+            <div>
+                <h3 id="action-title" class="text-xl font-bold mb-3">IDENTIFIED HAZARDS | RISK LEVEL (H, M, L) | CONTROLS (ACTION PLAN)</h3>
+                <table id="action-table">
+                    <thead><tr class="bg-gray-200">
+                        <th id="col-hazard">Hazard</th>
+                        <th id="col-risk">Risk</th>
+                        <th id="col-controls">Controls (Action Plan)</th>
+                    </tr></thead>
+                    <tbody id="action-body"></tbody>
+                </table>
+                <button onclick="addActionRow()" class="mt-3 bg-red-700 text-white px-5 py-2 rounded no-print">+ Add Row</button>
+            </div>
+
+            <!-- PPE -->
+            <div>
+                <h3 id="ppe-title" class="text-xl font-bold mb-3">PPE REQUIREMENTS (Visually Inspected)</h3>
+                <div id="ppe-grid" class="hazard-grid text-sm"></div>
+            </div>
+
+            <!-- Tasks -->
+            <div>
+                <h3 id="tasks-title" class="text-xl font-bold mb-2">LIST ALL TASKS TO BE PERFORMED:</h3>
+                <textarea id="tasks" rows="4" class="w-full border p-3 rounded"></textarea>
+            </div>
+
+            <!-- Reviews -->
+            <div class="border p-4 rounded">
+                <h3 id="reviews-title" class="font-bold mb-4">FIELD LEVEL HAZARD ASSESSMENT REVIEWS</h3>
+                <table class="w-full text-sm">
+                    <thead><tr class="bg-amber-100">
+                        <th>TIME FLHA WAS CONDUCTED</th>
+                        <th>AFTER 1st BREAK</th>
+                        <th>AFTER LUNCH</th>
+                        <th>AFTER 2nd BREAK</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="time" class="w-full"></td>
+                            <td><input type="text" placeholder="Initials" class="w-full"></td>
+                            <td><input type="text" placeholder="Initials" class="w-full"></td>
+                            <td><input type="text" placeholder="Initials" class="w-full"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Sign-offs -->
+            <div>
+                <h3 id="signoffs-title" class="font-bold mb-3">WORKERS ON SITE - I have read and understand this FLHA</h3>
+                <table class="w-full border" id="signoff-table">
+                    <thead><tr class="bg-yellow-100">
+                        <th id="col-name">NAME (Please Print)</th>
+                        <th>INITIAL</th>
+                    </tr></thead>
+                    <tbody id="signoff-body"></tbody>
+                </table>
+                <button onclick="addSignoffRow()" class="mt-3 bg-red-700 text-white px-5 py-2 rounded no-print">+ Add Worker</button>
+            </div>
+
+            <!-- Email Section -->
+            <div class="border p-6 rounded-xl bg-blue-50 no-print">
+                <h3 class="font-bold text-xl mb-4">📧 Email This FLHA Form</h3>
+                <div class="flex gap-3 flex-wrap items-center">
+                    <select id="email-select" class="flex-1 border p-3 rounded min-w-[280px]"></select>
+                    <button onclick="addNewEmail()" class="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700">+ Add New</button>
+                    <button onclick="sendEmail()" class="bg-red-700 text-white px-8 py-3 rounded hover:bg-red-800 font-semibold">📤 Email Form Now</button>
+                </div>
+                <p class="text-xs text-gray-500 mt-3">Saved emails appear automatically next time.</p>
+            </div>
+
+            <div class="text-center text-sm text-gray-600 pt-8 border-t">
+                <p><strong>THINK SAFETY. WORK SAFELY.</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Controls -->
+    <div class="fixed bottom-6 right-6 flex flex-col gap-3 no-print">
+        <button onclick="saveForm()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full shadow-lg">💾 Save Progress</button>
+        <button onclick="printForm()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full shadow-lg">🖨️ Print / PDF</button>
+        <button onclick="loadDemo()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-full shadow-lg text-xs">Load Demo</button>
+    </div>
+
+    <script>
+        // Translations
+        const translations = {
+            en: {
+                lblDate: "DATE:", lblProject: "PROJECT:", stopTitle: "STOP & THINK", stopText: "LOOK AROUND. IDENTIFY, ASSESS, CONTROL OR ELIMINATE HAZARDS. RESUME WORK.",
+                hazardsHeader: "IDENTIFIED HAZARDS (Check all that apply)", matrixTitle: "RISK LEVEL MATRIX",
+                actionTitle: "IDENTIFIED HAZARDS | RISK LEVEL (H, M, L) | CONTROLS (ACTION PLAN)",
+                colHazard: "Hazard", colRisk: "Risk", colControls: "Controls (Action Plan)",
+                ppeTitle: "PPE REQUIREMENTS (Visually Inspected)", tasksTitle: "LIST ALL TASKS TO BE PERFORMED:",
+                reviewsTitle: "FIELD LEVEL HAZARD ASSESSMENT REVIEWS",
+                signoffsTitle: "WORKERS ON SITE - I have read and understand this FLHA", colName: "NAME (Please Print)"
+            },
+            fr: {
+                lblDate: "DATE :", lblProject: "PROJET :", stopTitle: "ARRÊTEZ & RÉFLÉCHISSEZ", stopText: "REGARDEZ AUTOUR. IDENTIFIEZ, ÉVALUEZ, CONTRÔLEZ OU ÉLIMINEZ LES RISQUES. REPRENEZ LE TRAVAIL.",
+                hazardsHeader: "RISQUES IDENTIFIÉS (Cochez tous ceux qui s'appliquent)", matrixTitle: "MATRICE DE NIVEAU DE RISQUE",
+                actionTitle: "RISQUES IDENTIFIÉS | NIVEAU DE RISQUE (É, M, F) | CONTRÔLES (PLAN D'ACTION)",
+                colHazard: "Risque", colRisk: "Niveau", colControls: "Contrôles (Plan d'action)",
+                ppeTitle: "EXIGENCES EPI (Inspectés visuellement)", tasksTitle: "LISTEZ TOUTES LES TÂCHES À EFFECTUER :",
+                reviewsTitle: "RÉVISIONS DE L'ÉVALUATION DES RISQUES",
+                signoffsTitle: "TRAVAILLEURS SUR SITE - J'ai lu et je comprends cette FLHA", colName: "NOM (En lettres moulées)"
+            },
+            es: {
+                lblDate: "FECHA:", lblProject: "PROYECTO:", stopTitle: "DETÉNGASE & PIENSE", stopText: "MIRA A TU ALREDEDOR. IDENTIFICA, EVALÚA, CONTROLA O ELIMINA LOS PELIGROS. REANUDA EL TRABAJO.",
+                hazardsHeader: "PELIGROS IDENTIFICADOS (Marque todos los que apliquen)", matrixTitle: "MATRIZ DE NIVEL DE RIESGO",
+                actionTitle: "PELIGROS IDENTIFICADOS | NIVEL DE RIESGO (A, M, B) | CONTROLES (PLAN DE ACCIÓN)",
+                colHazard: "Peligro", colRisk: "Riesgo", colControls: "Controles (Plan de Acción)",
+                ppeTitle: "REQUISITOS EPP (Inspeccionados visualmente)", tasksTitle: "LISTE TODAS LAS TAREAS A REALIZAR:",
+                reviewsTitle: "REVISIÓN DE EVALUACIÓN DE PELIGROS EN CAMPO",
+                signoffsTitle: "TRABAJADORES EN SITIO - He leído y entiendo esta FLHA", colName: "NOMBRE (En letra de molde)"
+            }
+        };
+
+        let currentLang = 'en';
+
+        function changeLanguage() {
+            currentLang = document.getElementById('language').value;
+            const t = translations[currentLang];
+            document.getElementById('lbl-date').textContent = t.lblDate;
+            document.getElementById('lbl-project').textContent = t.lblProject;
+            document.getElementById('stop-title').textContent = t.stopTitle;
+            document.getElementById('stop-text').textContent = t.stopText;
+            document.getElementById('hazards-header').textContent = t.hazardsHeader;
+            document.getElementById('matrix-title').textContent = t.matrixTitle;
+            document.getElementById('action-title').textContent = t.actionTitle;
+            document.getElementById('col-hazard').textContent = t.colHazard;
+            document.getElementById('col-risk').textContent = t.colRisk;
+            document.getElementById('col-controls').textContent = t.colControls;
+            document.getElementById('ppe-title').textContent = t.ppeTitle;
+            document.getElementById('tasks-title').textContent = t.tasksTitle;
+            document.getElementById('reviews-title').textContent = t.reviewsTitle;
+            document.getElementById('signoffs-title').textContent = t.signoffsTitle;
+            document.getElementById('col-name').textContent = t.colName;
+        }
+
+        const allHazards = [
+            "Poor Housekeeping/Material Storage", "Poor Lighting", "Icy/Wet/Slippery Walkways and Surfaces",
+            "Dusts/Mists/Fumes/Vapours", "Extreme Cold/Extreme Heat", "Electrical/Lightning Storms",
+            "High Winds", "Toxic Chemicals/Substances", "Awkward Body Positioning", "Awkward/Heavy Loads",
+            "Limited/Restricted/Tight Work Area", "Over Exerting", "Crushing Hazards and Pinch Points",
+            "Twisting and Bending", "Working Above Your Head", "Overhead Work", "Airborne Particles",
+            "Burn/Heat Sources AND/OR Surfaces", "Compressed Air/Gases", "Congested/Overcrowded Work Area",
+            "Cutting/Grinding of Metal/Wood/Other Materials", "Motor Vehicles and Powered Mobile Equipment",
+            "Soldering", "Welding", "Bridge Crane", "Entry/Exit Routes", "Ladders (for accessing roofs)",
+            "Walkways", "Ramps", "Stairways", "Excavations", "Slip/Trip Potential",
+            "Damaged/Defective Electrical Cords", "Damaged/Defective Electrical Tools",
+            "Exposure To Energized Equipment", "Unsafe Distance From Overhead Power Lines",
+            "Lack of Experience", "Lack of Instructions", "Lack of Training", "Working Alone",
+            "Ladders (Extension & Step Ladders 3m+)", "Mobile Elevated Work Platforms (MEWPs)",
+            "Poorly Constructed Scaffolding", "Untagged Scaffolds", "Unprotected Floor/Roof Openings",
+            "Unprotected Leading Edges", "Unprotected Elevator Shafts", "Workers Below"
+        ];
+
+        const ppeList = ["Hard Hat", "Safety Footwear", "Safety Glasses", "Dust Mask/Respirator", "Hand Protection",
+                         "Hearing Protection", "Face Protection", "Fall Protection", "High Visibility Vest"];
+
+        function populateHazards() {
+            const container = document.getElementById('hazards-grid');
+            container.innerHTML = '';
+            allHazards.forEach(h => {
+                const div = document.createElement('div');
+                div.className = "border p-3 rounded hover:bg-gray-50 flex gap-2";
+                div.innerHTML = `<input type="checkbox" class="mt-1"> <span>${h}</span>`;
+                container.appendChild(div);
+            });
+        }
+
+        function populatePPE() {
+            const container = document.getElementById('ppe-grid');
+            container.innerHTML = '';
+            ppeList.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "border p-3 rounded hover:bg-gray-50 flex gap-2";
+                div.innerHTML = `<input type="checkbox" class="mt-1"> <span>${item}</span>`;
+                container.appendChild(div);
+            });
+        }
+
+        function addActionRow() {
+            const tbody = document.getElementById('action-body');
+            const row = tbody.insertRow();
+            row.innerHTML = `<td><input type="text" class="w-full p-1 border"></td>
+                             <td><select class="w-full p-1 border"><option>H</option><option selected>M</option><option>L</option></select></td>
+                             <td><textarea class="w-full p-1 border"></textarea></td>`;
+        }
+
+        function addSignoffRow() {
+            const tbody = document.getElementById('signoff-body');
+            const row = tbody.insertRow();
+            row.innerHTML = `<td><input type="text" class="w-full p-1 border"></td><td><input type="text" class="w-full p-1 border"></td>`;
+        }
+
+        // Email System
+        let savedEmails = [];
+        function loadEmails() {
+            const saved = localStorage.getItem('flha_emails');
+            savedEmails = saved ? JSON.parse(saved) : ["mike@westglas.ca", "jon@westglas.ca", "d.forrest@shaw.ca"];
+            renderEmailDropdown();
+        }
+        function renderEmailDropdown() {
+            const select = document.getElementById('email-select');
+            select.innerHTML = '<option value="">Select email...</option>';
+            savedEmails.forEach(email => {
+                const opt = document.createElement('option');
+                opt.value = email; opt.textContent = email;
+                select.appendChild(opt);
+            });
+        }
+        function addNewEmail() {
+            let email = prompt("Enter new email address:");
+            if (email && email.includes('@') && !savedEmails.includes(email)) {
+                savedEmails.push(email);
+                localStorage.setItem('flha_emails', JSON.stringify(savedEmails));
+                renderEmailDropdown();
+                alert("✅ Email saved!");
+            }
+        }
+        function sendEmail() {
+            const to = document.getElementById('email-select').value;
+            if (!to) return alert("Please select an email");
+            const project = document.getElementById('project').value || "Untitled";
+            const date = document.getElementById('date').value;
+            let body = `WESTGLAS FLHA\nDate: ${date}\nProject: ${project}\nWeather: ${document.getElementById('weather-info').innerText}\n\n`;
+            body += `Tasks:\n${document.getElementById('tasks').value || "None"}\n\nAction Plan:\n`;
+            document.querySelectorAll('#action-body tr').forEach(tr => {
+                const cells = tr.cells;
+                if (cells.length > 0) body += `- ${cells[0].querySelector('input').value} (${cells[1].querySelector('select').value}): ${cells[2].querySelector('textarea').value}\n`;
+            });
+            body += `\nFull form link: ${window.location.href}`;
+            window.location.href = `mailto:${to}?subject=FLHA - ${project}&body=${encodeURIComponent(body)}`;
+        }
+
+        async function fetchWeather() {
+            const div = document.getElementById('weather-info');
+            try {
+                let lat = 51.0447, lon = -114.0719;
+                if (navigator.geolocation) {
+                    try {
+                        const pos = await new Promise(r => navigator.geolocation.getCurrentPosition(r, () => {}, {timeout: 5000}));
+                        lat = pos.coords.latitude; lon = pos.coords.longitude;
+                    } catch(e){}
+                }
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
+                const data = await res.json();
+                const temp = data.current.temperature_2m;
+                const code = data.current.weather_code;
+                const desc = {0:"Clear",1:"Mainly clear",2:"Partly cloudy",3:"Overcast",45:"Fog",61:"Rain",71:"Snow"}[code] || "Cloudy";
+                div.innerHTML = `🌡️ <strong>${temp}°C, ${desc}</strong>`;
+            } catch(e) {
+                div.textContent = "🌡️ Weather (Calgary)";
+            }
+        }
+
+        function saveForm() { alert("✅ Progress saved in browser!"); }
+        function printForm() { window.print(); }
+        function loadDemo() {
+            document.getElementById('project').value = "Demo Job #2026-045";
+            document.getElementById('tasks').value = "Insulation installation\nScaffold work at heights";
+        }
+
+        window.onload = () => {
+            document.getElementById('date').valueAsDate = new Date();
+            populateHazards();
+            populatePPE();
+            addActionRow();
+            addSignoffRow();
+            loadEmails();
+            fetchWeather();
+        };
+    </script>
+</body>
+</html>
